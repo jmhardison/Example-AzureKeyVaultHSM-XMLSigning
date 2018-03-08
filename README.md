@@ -1,0 +1,1 @@
+# Example Azure KeyVault HMS Protected Key XML Document Signing
