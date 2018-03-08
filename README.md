@@ -65,4 +65,13 @@ To begin...
 * Your certificate will show in "in progress" until it is finished issuing and storing in KeyVault. Once complete, you can proceed to collect information and test.
 
 Collecting the following information used in the test.
-* 
+* Certificate Name
+  * As defined during creation, but can also be seen in the list of issued certificates in the KeyVault -> Certificates portal.
+* Key Vault URL
+  * In KeyVault details -> Overview, retrieve the "DNS Name" field.
+* Application ID
+  * From within Azure Active Directory in the Azure Portal, under "App Registrations" find your application and select it. Application ID field is displayed.
+* Application Secret/Key
+  * From the App Registration for your application in the Azure Portal, click "settings" -> "Keys", generate a new key and copy the value provided.
+
+This application will require rights in your Azure KeyVault, which is assigned under "Access Policies" on your deployed KeyVault's settings in the Azure Portal. Just add your app registration with at least "Get" "Verify" and "Sign" key permissions, and "Get" certificate permissions.
