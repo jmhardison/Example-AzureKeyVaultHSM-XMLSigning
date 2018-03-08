@@ -293,5 +293,6 @@ __pycache__/
 
 #ignore testfile output
 */testfile1signed.xml
-.vscode/**
-.vscode/launch.json
+#.vscode/**
+#.vscode/launch.json
+
