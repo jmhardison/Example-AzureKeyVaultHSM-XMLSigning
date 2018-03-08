@@ -38,3 +38,40 @@ Example: cli-exakvdocsign -aadclientid 123 -aadclientsecret 123= -keyvaulturl ht
 
 * `dotnet build`
 
+## Stage Testing
+
+In order to test this application out, your keyvault needs to have some stuff protected with HSM. There are several ways to accomplish this setup, but for simplicity lets talk about creating a self-signed certificate insize the keyvault.
+To begin...
+
+* In Azure portal, select your deployed keyvault and then click "Certificates".
+* Click "Generate/Import".
+* Fill in information as needed:
+  * Method of creation: Generate
+  * Certificate Name: name to call the entry by, this is not your CN for the cert.
+  * Type of CA: Self-signed certificate
+  * Subject: CN=examplecertname.docsigning.fun
+  * Validity Period: 12 (or more/less)
+  * Content Type: PKCS #12
+  * Lifetime Action Type: Automatically renew at a given percentage lifetime.
+  * Advanced Policy Configuration:
+    * Extended Key Use: 1.3.6.1.5.5.7.3.1, 1.3.6.1.5.5.7.3.2
+    * X.509 Key Usage Flags: Digital Signature, Key Encipherment
+    * Reuse Key on Renewal: no
+    * Exporatable Private Key: No (important, if yes you cannot do HSM)
+    * Key Type: RSA-HSM
+    * Key Size: 2048 (or higher)
+    * Certificate Type: leave blank
+* Click "OK" on Advanced Policy, and then click "Create".
+* Your certificate will show in "in progress" until it is finished issuing and storing in KeyVault. Once complete, you can proceed to collect information and test.
+
+Collecting the following information used in the test.
+* Certificate Name
+  * As defined during creation, but can also be seen in the list of issued certificates in the KeyVault -> Certificates portal.
+* Key Vault URL
+  * In KeyVault details -> Overview, retrieve the "DNS Name" field.
+* Application ID
+  * From within Azure Active Directory in the Azure Portal, under "App Registrations" find your application and select it. Application ID field is displayed.
+* Application Secret/Key
+  * From the App Registration for your application in the Azure Portal, click "settings" -> "Keys", generate a new key and copy the value provided.
+
+This application will require rights in your Azure KeyVault, which is assigned under "Access Policies" on your deployed KeyVault's settings in the Azure Portal. Just add your app registration with at least "Get" "Verify" and "Sign" key permissions, and "Get" certificate permissions.
