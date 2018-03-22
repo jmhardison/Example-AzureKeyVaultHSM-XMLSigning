@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/v05cki0xy9uvlkgk/branch/master?svg=true)](https://ci.appveyor.com/project/jmhardison/example-azurekeyvaulthsm-xmlsigning/branch/master) [![Black Duck Security Risk](https://copilot.blackducksoftware.com/github/repos/jmhardison/Example-AzureKeyVaultHSM-XMLSigning/branches/adding-appveyor/badge-risk.svg)](https://copilot.blackducksoftware.com/github/repos/jmhardison/Example-AzureKeyVaultHSM-XMLSigning/branches/adding-appveyor)
+[![Build status](https://ci.appveyor.com/api/projects/status/v05cki0xy9uvlkgk/branch/master?svg=true)](https://ci.appveyor.com/project/jmhardison/example-azurekeyvaulthsm-xmlsigning/branch/master) [![Black Duck Security Risk](https://copilot.blackducksoftware.com/github/repos/jmhardison/Example-AzureKeyVaultHSM-XMLSigning/branches/master/badge-risk.svg)](https://copilot.blackducksoftware.com/github/repos/jmhardison/Example-AzureKeyVaultHSM-XMLSigning/branches/master)
 
 # Example Azure KeyVault HMS Protected Key XML Document Signing
 
