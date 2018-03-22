@@ -77,4 +77,13 @@ Collecting the following information used in the test.
 * `Application Secret/Key`
   * From the App Registration for your application in the Azure Portal, click `settings` -> `Keys`, generate a new key and copy the value provided.
 
-This application will require rights in your Azure KeyVault, which is assigned under `Access Policies` on your deployed KeyVault's settings in the Azure Portal. Just add your app registration with at least `Get` `Verify` and `Sign` key permissions, and `Get` certificate permissions.
+
+This application will require rights in your Azure KeyVault, which is assigned under `Access Policies` on your deployed KeyVault's settings in the Azure Portal. Just add your app registration with the following permissions:
+
+* Key Permissions
+  * `Get`
+  * `Verify`
+  * `Sign`
+
+* Certificate Permissions
+  * `Get`
