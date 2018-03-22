@@ -1,0 +1,53 @@
+version: 0.1.{build}
+max_jobs: 1
+image: Visual Studio 2017 Preview
+platform: x64
+shallow_clone: true
+clone_depth: 1
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  package_version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+install:
+- cmd: dotnet restore
+build_script:
+- cmd: >-
+    dotnet publish -c Release --self-contained -r osx-x64
+
+    dotnet publish -c Release --self-contained -r centos-x64
+
+    dotnet publish -c Release --self-contained -r rhel-x64
+
+    dotnet publish -c Release --self-contained -r linux-x64
+
+    dotnet publish -c Release --self-contained -r win-x64
+artifacts:
+- path: '\cli-exakvdocsign\bin\x64\Release\netcoreapp2.0\centos-x64\publish\'
+  name: centos-x64-binaries
+- path: '\cli-exakvdocsign\bin\x64\Release\netcoreapp2.0\linux-x64\publish\'
+  name: linux-x64-binaries
+- path: '\cli-exakvdocsign\bin\x64\Release\netcoreapp2.0\rhel-x64\publish\'
+  name: rhel-x64-binaries
+- path: '\cli-exakvdocsign\bin\x64\Release\netcoreapp2.0\osx-x64\publish\'
+  name: osx-x64-binaries
+- path: '\cli-exakvdocsign\bin\x64\Release\netcoreapp2.0\win-x64\publish\'
+  name: win-x64-binaries
+deploy:
+- provider: GitHub
+  description: $(APPVEYOR_REPO_COMMIT_MESSAGE)
+  auth_token:
+    secure: vXTmOtIh61tHpwinNk4SiqzsVwnvppTlaVsCiQUW/CVX4RLJk1ZlgJkhUkDIy9ex
+  repository: jmhardison/Example-AzureKeyVaultHSM-XMLSigning
+  artifact: centos-x64-binaries,linux-x64-binaries,rhel-x64-binaries,osx-x64-binaries,win-x64-binaries
+  draft: true
+  prerelease: false
+  force_update: true
+  on:
+    APPVEYOR_REPO_BRANCH: master
+on_success:
+- curl -s -o copilot https://copilot.blackducksoftware.com/ci/appveyor/scripts/upload
+- bash copilot
