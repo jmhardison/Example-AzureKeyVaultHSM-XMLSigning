@@ -48,6 +48,3 @@ deploy:
   force_update: true
   on:
     APPVEYOR_REPO_BRANCH: master
-on_success:
-- curl -s -o copilot https://copilot.blackducksoftware.com/ci/appveyor/scripts/upload
-- bash copilot
