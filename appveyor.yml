@@ -1,6 +1,6 @@
 version: 0.1.{build}
 max_jobs: 1
-image: Visual Studio 2017 Preview
+image: Visual Studio 2017
 platform: x64
 shallow_clone: true
 clone_depth: 1
@@ -48,6 +48,3 @@ deploy:
   force_update: true
   on:
     APPVEYOR_REPO_BRANCH: master
-on_success:
-- curl -s -o copilot https://copilot.blackducksoftware.com/ci/appveyor/scripts/upload
-- bash copilot
