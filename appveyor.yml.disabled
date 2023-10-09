@@ -39,8 +39,7 @@ artifacts:
 deploy:
 - provider: GitHub
   description: $(APPVEYOR_REPO_COMMIT_MESSAGE)
-  auth_token:
-    secure: vXTmOtIh61tHpwinNk4SiqzsVwnvppTlaVsCiQUW/CVX4RLJk1ZlgJkhUkDIy9ex
+
   repository: jmhardison/Example-AzureKeyVaultHSM-XMLSigning
   artifact: centos-x64-binaries,linux-x64-binaries,rhel-x64-binaries,osx-x64-binaries,win-x64-binaries
   draft: true
