@@ -1,5 +1,3 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/v05cki0xy9uvlkgk/branch/master?svg=true)](https://ci.appveyor.com/project/jmhardison/example-azurekeyvaulthsm-xmlsigning/branch/master) [![Black Duck Security Risk](https://copilot.blackducksoftware.com/github/repos/jmhardison/Example-AzureKeyVaultHSM-XMLSigning/branches/master/badge-risk.svg)](https://copilot.blackducksoftware.com/github/repos/jmhardison/Example-AzureKeyVaultHSM-XMLSigning/branches/master)
-
 # Example Azure KeyVault HMS Protected Key XML Document Signing
 
 This project is an example, correction... ugly example, of how to sign XML Documents using keys that are stored in Azure KeyVault HSM.
