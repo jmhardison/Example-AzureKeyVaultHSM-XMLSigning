@@ -77,16 +77,16 @@ namespace cli_exakvdocsign
         ///     Construct an RSAPKCS1SHA256SignatureDescription object. The default settings for this object
         ///     are:
         ///     <list type="bullet">
-        ///         <item>Digest algorithm - <see cref="SHA256Managed" /></item>
-        ///         <item>Key algorithm - <see cref="RSACryptoServiceProvider" /></item>
+        ///         <item>Digest algorithm - <see cref="SHA256" /></item>
+        ///         <item>Key algorithm - <see cref="RSA" /></item>
         ///         <item>Formatter algorithm - <see cref="RSAPKCS1SignatureFormatter" /></item>
         ///         <item>Deformatter algorithm - <see cref="RSAPKCS1SignatureDeformatter" /></item>
         ///     </list>
         /// </summary>
         public RSAPKCS1SHA256SignatureDescription()
         {
-            KeyAlgorithm = typeof(RSACryptoServiceProvider).FullName;
-            DigestAlgorithm = typeof(SHA256Managed).FullName;   // Note - SHA256CryptoServiceProvider is not registered with CryptoConfig
+            KeyAlgorithm = typeof(RSA).FullName; // Updated from RSACryptoServiceProvider
+            DigestAlgorithm = typeof(SHA256).FullName; // Updated from SHA256Managed
             FormatterAlgorithm = typeof(RSAPKCS1SignatureFormatter).FullName;
             DeformatterAlgorithm = typeof(RSAPKCS1SignatureDeformatter).FullName;
         }

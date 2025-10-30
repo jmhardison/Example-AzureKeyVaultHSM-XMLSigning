@@ -3,29 +3,25 @@
  */
 
 using System;
-using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Xml;
-using Microsoft.Azure.KeyVault;
-using Microsoft.Azure.KeyVault.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.AzureKeyVault;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Azure.Security.KeyVault.Keys;
+using Azure.Security.KeyVault.Certificates;
+using Azure.Identity;
 using System.Text;
-
 
 namespace cli_exakvdocsign
 {
-class Program
+    class Program
     {
         // AAD Application ID - Create a new application registration and grant it appropriate rights to the KeyVault.
         private static string AADClientID;
         // AAD Application Secret/Key - Create a "password key" that lives for the desired validity period before expiring.
         private static string AADClientSecret;
-        // KeyVault Address - Full address of deployed KeyVault. 
+        // KeyVault Address - Full address of deployed KeyVault.
         internal static string KeyVaultAddress;
         //certificate name  - Provided in creation of cert, also visible in key identifier. (*.vault.azure.net/keys/<certnamehere/*)
         internal static string CertName;
@@ -34,41 +30,46 @@ class Program
         //file name and path of where to save the signed xml document.
         private static string XMLFileOutputName;
 
-        //instantiated KeyVault client used through the example.
-        internal static KeyVaultClient keyVault;
-        //retrieved keybundle (private key). Note, the actual private key is never returned by Azure KeyVault HSM.
-        internal static KeyBundle secretKeyBundle;
-        //retrieved public certificate bundle. This will also hold a reference the the appropriate private key information.
-        internal static CertificateBundle publicCertBundle;
-        
+        //instantiated KeyVault clients used through the example.
+        internal static KeyClient keyClient;
+        internal static CertificateClient certificateClient;
+        //retrieved key
+        internal static KeyVaultKey secretKey;
+        //retrieved public certificate
+        internal static KeyVaultCertificateWithPolicy publicCert;
+
         //holds file name of signed xml to check. When populated, no other actions are ran.
         private static string ValidateFile = null;
 
-       
-        
-        static void Main(string[] args)
+        // Add these static properties to the Program class:
+        internal static string TenantID;
+
+        static async Task Main(string[] args)
         {
             try{
                 //run through the arguments and break them into variables.
                 ProcessArgs(args);
 
-                //if user is requesting validaiton of a file, only run verifydoc and exit.
+                //if user is requesting validation of a file, only run verifydoc and exit.
                 if(ValidateFile != null)
                 {
                     VerifyDoc();
                 }
                 else{
-                    
-                    //create KeyVault Client and authenticate with AAD. (GetAccessToken method.)
-                    keyVault = new KeyVaultClient(
-                        new KeyVaultClient.AuthenticationCallback(GetAccessToken),
-                        new HttpClient());
-                    
-                    //get cert bundle from supplied certificate name.
-                    publicCertBundle = keyVault.GetCertificateAsync(KeyVaultAddress, CertName).Result;
-                    //get secret (private key) bundle from information in public cert bundle pointing to current key and version associated to cert.
-                    secretKeyBundle = keyVault.GetKeyAsync(publicCertBundle.KeyIdentifier.Vault, publicCertBundle.KeyIdentifier.Name).Result;
-                    
+
+                    //create KeyVault Clients with Azure Identity
+                    var credential = new ClientSecretCredential(
+                        tenantId: Environment.GetEnvironmentVariable("AZURE_TENANT_ID"), // You'll need to add this
+                        clientId: AADClientID,
+                        clientSecret: AADClientSecret);
+
+                    keyClient = new KeyClient(new Uri(KeyVaultAddress), credential);
+                    certificateClient = new CertificateClient(new Uri(KeyVaultAddress), credential);
+
+                    //get cert from supplied certificate name.
+                    publicCert = await certificateClient.GetCertificateAsync(CertName);
+                    //get key from certificate
+                    secretKey = await keyClient.GetKeyAsync(CertName);
 
                     //sign the doc yo!
                     SignDoc();
@@ -78,16 +79,6 @@ class Program
                 Console.Write("\n\n Error Caught: \n\n" + e.Message);
             }
         }
-
-        public static async Task<string> GetAccessToken(string authority, string resource, string scope)  
-        {  
-            ClientCredential clientCredential = new ClientCredential(AADClientID, AADClientSecret);  
-        
-            var context = new AuthenticationContext(authority, TokenCache.DefaultShared);  
-            var result = await context.AcquireTokenAsync(resource, clientCredential);  
-        
-            return result.AccessToken;  
-        }  
 
         private static void ProcessArgs(string[] args){
             if(args.Length > 0){
@@ -113,6 +104,10 @@ class Program
                     }
                     else if(args[i].StartsWith("-xmlfiletosave")){
                         XMLFileOutputName = args[i+1];
+                    }
+                    else if(args[i].StartsWith("-tenantid"))
+                    {
+                        TenantID = args[i].Substring(10);
                     }
                 }
             }
@@ -147,8 +142,8 @@ class Program
                 // Load an XML file into the XmlDocument object.
                 xmlDoc.PreserveWhitespace = true;
                 xmlDoc.Load(XMLFileName);
-                
-                // Sign the XML document. 
+
+                // Sign the XML document.
                 SignXml(xmlDoc);
 
             }
@@ -164,19 +159,15 @@ class Program
                 // Load an XML file into the XmlDocument object.
                 xmlDoc.PreserveWhitespace = true;
                 xmlDoc.Load(ValidateFile);
-                
-                // Sign the XML document. 
+
+                // Sign the XML document.
                 Console.WriteLine("The file validation results in: " + Verify(xmlDoc));
         }
 
-        //sourced https://docs.microsoft.com/en-us/dotnet/standard/security/how-to-sign-xml-documents-with-digital-signatures
-        // Sign an XML file. 
-        // This document cannot be verified unless the verifying 
-        // code has the key with which it was signed.
         public static void SignXml(XmlDocument xmlDoc)
         {
-            RSA key = secretKeyBundle.Key.ToRSA();
-            
+            RSA key = secretKey.Key.ToRSA();
+
             // Check arguments.
             if (xmlDoc == null)
                 throw new ArgumentException("xmlDoc");
@@ -192,14 +183,12 @@ class Program
             // add key info
             KeyInfo importKeyInfo = new KeyInfo();
             KeyInfoX509Data importKeyInfoData = new KeyInfoX509Data();
-            X509Certificate tempCert = new X509Certificate(publicCertBundle.Cer);
+            X509Certificate tempCert = new X509Certificate(publicCert.Cer);
             importKeyInfoData.AddCertificate(tempCert);
             importKeyInfoData.AddIssuerSerial(tempCert.Issuer, tempCert.GetSerialNumberString());
 
             importKeyInfo.AddClause(importKeyInfoData);
             signedXml.KeyInfo = importKeyInfo;
-            
-
 
             // Create a reference to be signed.
             Reference reference = new Reference();
@@ -225,8 +214,7 @@ class Program
             xmlDoc.Save(XMLFileOutputName);
 
             var test = Verify(xmlDoc);
-            Console.WriteLine("XML Signed and validated as: " + test.ToString());         
-
+            Console.WriteLine("XML Signed and validated as: " + test.ToString());
         }
 
         public static bool Verify(XmlDocument document)
@@ -251,9 +239,6 @@ class Program
                 }
             }
             return signed.CheckSignature(new X509Certificate2(cer), true);
-
         }
-
-
     }
 }
