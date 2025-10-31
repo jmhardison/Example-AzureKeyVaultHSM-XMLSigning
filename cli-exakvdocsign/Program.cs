@@ -148,7 +148,7 @@ namespace cli_exakvdocsign
 
             }
             catch(Exception e){
-                throw;
+                Console.WriteLine("Error during signing process: " + e.Message);
             }
         }
 

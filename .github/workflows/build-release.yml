@@ -26,16 +26,9 @@ jobs:
     - name: Build and publish for multiple platforms
       run: |
         dotnet publish -c Release --self-contained -r osx-x64
-        dotnet publish -c Release --self-contained -r centos-x64
-        dotnet publish -c Release --self-contained -r rhel-x64
         dotnet publish -c Release --self-contained -r linux-x64
         dotnet publish -c Release --self-contained -r win-x64
 
-    - name: Create artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: centos-x64-binaries
-        path: cli-exakvdocsign/bin/Release/net8.0/centos-x64/publish/
 
     - name: Upload Linux x64 artifacts
       uses: actions/upload-artifact@v4
@@ -43,11 +36,6 @@ jobs:
         name: linux-x64-binaries
         path: cli-exakvdocsign/bin/Release/net8.0/linux-x64/publish/
 
-    - name: Upload RHEL x64 artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: rhel-x64-binaries
-        path: cli-exakvdocsign/bin/Release/net8.0/rhel-x64/publish/
 
     - name: Upload macOS x64 artifacts
       uses: actions/upload-artifact@v4
@@ -84,15 +72,6 @@ jobs:
         draft: true
         prerelease: false
 
-    - name: Upload centos-x64 Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./centos-x64-binaries
-        asset_name: centos-x64-binaries.zip
-        asset_content_type: application/zip
 
     - name: Upload linux-x64 Release Asset
       uses: actions/upload-release-asset@v1
@@ -104,15 +83,6 @@ jobs:
         asset_name: linux-x64-binaries.zip
         asset_content_type: application/zip
 
-    - name: Upload rhel-x64 Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./rhel-x64-binaries
-        asset_name: rhel-x64-binaries.zip
-        asset_content_type: application/zip
 
     - name: Upload osx-x64 Release Asset
       uses: actions/upload-release-asset@v1
