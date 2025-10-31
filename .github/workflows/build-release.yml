@@ -29,13 +29,11 @@ jobs:
         dotnet publish -c Release --self-contained -r linux-x64
         dotnet publish -c Release --self-contained -r win-x64
 
-
     - name: Upload Linux x64 artifacts
       uses: actions/upload-artifact@v4
       with:
         name: linux-x64-binaries
         path: cli-exakvdocsign/bin/Release/net8.0/linux-x64/publish/
-
 
     - name: Upload macOS x64 artifacts
       uses: actions/upload-artifact@v4
@@ -56,6 +54,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for version calculation
+
+    - name: Calculate next version
+      id: version
+      run: |
+        # Get the latest tag, default to 0.0.0 if no tags exist
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        echo "Latest tag: $LATEST_TAG"
+
+        # Remove 'v' prefix and split version
+        VERSION=${LATEST_TAG#v}
+        IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+
+        # Increment patch version (you can modify this logic as needed)
+        MAJOR=${VERSION_PARTS[0]:-0}
+        MINOR=${VERSION_PARTS[1]:-0}
+        PATCH=${VERSION_PARTS[2]:-0}
+
+        # Increment patch version
+        PATCH=$((PATCH + 1))
+
+        NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+        NEW_TAG="v$NEW_VERSION"
+
+        echo "Next version: $NEW_VERSION"
+        echo "Next tag: $NEW_TAG"
+
+        # Set outputs
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
@@ -66,12 +95,36 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ github.run_number }}
-        release_name: Release v${{ github.run_number }}
-        body: ${{ github.event.head_commit.message }}
-        draft: true
+        tag_name: ${{ steps.version.outputs.tag }}
+        release_name: Release ${{ steps.version.outputs.tag }}
+        body: |
+          ## Changes
+          ${{ github.event.head_commit.message }}
+
+          ## Assets
+          - linux-x64-binaries.zip - Linux x64 executable
+          - osx-x64-binaries.zip - macOS x64 executable
+          - win-x64-binaries.zip - Windows x64 executable
+        draft: false
         prerelease: false
 
+    - name: Zip Linux artifacts
+      run: |
+        cd linux-x64-binaries
+        zip -r ../linux-x64-binaries.zip .
+        cd ..
+
+    - name: Zip macOS artifacts
+      run: |
+        cd osx-x64-binaries
+        zip -r ../osx-x64-binaries.zip .
+        cd ..
+
+    - name: Zip Windows artifacts
+      run: |
+        cd win-x64-binaries
+        zip -r ../win-x64-binaries.zip .
+        cd ..
 
     - name: Upload linux-x64 Release Asset
       uses: actions/upload-release-asset@v1
@@ -79,10 +132,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./linux-x64-binaries
+        asset_path: ./linux-x64-binaries.zip
         asset_name: linux-x64-binaries.zip
         asset_content_type: application/zip
-
 
     - name: Upload osx-x64 Release Asset
       uses: actions/upload-release-asset@v1
@@ -90,7 +142,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./osx-x64-binaries
+        asset_path: ./osx-x64-binaries.zip
         asset_name: osx-x64-binaries.zip
         asset_content_type: application/zip
 
@@ -100,6 +152,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./win-x64-binaries
+        asset_path: ./win-x64-binaries.zip
         asset_name: win-x64-binaries.zip
         asset_content_type: application/zip
